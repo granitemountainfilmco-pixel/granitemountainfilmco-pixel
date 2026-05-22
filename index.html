@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USAF PFA Calculator (2-Mile Option)</title>
+    <style>
+        :root {
+            --af-blue: #00308F;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --border-color: #d1d5db;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-top: 5px solid var(--af-blue);
+        }
+        h1, h2, h3 { color: var(--af-blue); }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-weight: bold; margin-bottom: 5px; font-size: 0.9em; }
+        input, select {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        button {
+            background-color: var(--af-blue);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1.1em;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #00205F; }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #eef2f5;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .score-display { font-size: 2.5em; font-weight: bold; color: var(--af-blue); }
+        .warning { color: #d9534f; font-weight: bold; }
+        .pass { color: #5cb85c; font-weight: bold; }
+        details {
+            background: #f9fafb;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+        summary { font-weight: bold; cursor: pointer; color: var(--af-blue); font-size: 1.1em; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.85em;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        th { background-color: var(--af-blue); color: white; }
+        .video-links {
+            margin: 30px 0;
+            padding: 20px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+        }
+        .video-links a { color: var(--af-blue); font-weight: bold; text-decoration: none; }
+        .video-links a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>USAF PFA Calculator</h1>
+    <p>Calculate your estimated score based on the 2-Mile Run, 1-Min Push-ups, and 1-Min Sit-ups.</p>
+
+    <div class="grid">
+        <div class="form-group">
+            <label for="gender">Gender</label>
+            <select id="gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="age">Age Group</label>
+            <select id="age">
+                <option value="<25"><25</option>
+                <option value="25-29">25-29</option>
+                <option value="30-34">30-34</option>
+                <option value="35-39">35-39</option>
+                <option value="40-44">40-44</option>
+                <option value="45-49">45-49</option>
+                <option value="50-54">50-54</option>
+                <option value="55-59">55-59</option>
+                <option value="60+">60+</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="form-group">
+            <label>2-Mile Run Time</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="run-min" placeholder="Minutes" min="8" max="30">
+                <input type="number" id="run-sec" placeholder="Seconds" min="0" max="59">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="pushups">1-Min Push-ups (Reps)</label>
+            <input type="number" id="pushups" placeholder="Total Reps">
+        </div>
+        <div class="form-group">
+            <label for="situps">1-Min Sit-ups (Reps)</label>
+            <input type="number" id="situps" placeholder="Total Reps">
+        </div>
+    </div>
+
+    <button onclick="calculateScore()">Calculate PFA Score</button>
+
+    <div id="results" class="results" style="display: none;">
+        <h3>Your Estimated Score</h3>
+        <div class="score-display" id="total-score">0.0 / 80.0</div>
+        <p id="feedback-text"></p>
+        <p style="font-size: 0.85em; color: #666; margin-top: 15px;">
+            <em>Note: The full PFA includes a Waist-to-Height Ratio (WHtR) metric worth 20 points. This total evaluates the 80 points available for your selected physical components. Because score drop-offs are non-linear, these estimated points are interpolated between your demographic's max and min thresholds.</em>
+        </p>
+    </div>
+
+    <div class="video-links">
+        <h3>🎥 Official USAF Form Video</h3>
+        <p>Ensure your repetitions count. Watch the official U.S. Air Force instructional video for proper technique and common disqualifications:</p>
+        <ul>
+            <li><a href="https://www.youtube.com/watch?v=ACVjjF9f5NA" target="_blank">USAF Physical Fitness Assessment Instructions (Push-ups & Sit-ups)</a></li>
+        </ul>
+    </div>
+
+    <h2>Quick Reference Scoring</h2>
+    <details>
+        <summary>2-Mile Run</summary>
+        <p>The 2-Mile Run is the primary measure of cardiorespiratory fitness. <strong>Maximum points: 50.</strong> Minimum passing points: <strong>29.5</strong>. Failing to meet the minimum time for your age/gender bracket results in an immediate component failure, regardless of your total composite score.</p>
+    </details>
+    <details>
+        <summary>1-Minute Push-ups</summary>
+        <p>Push-ups measure your upper-body muscular fitness. <strong>Maximum points: 15.</strong> Minimum passing points: <strong>7.5</strong>. Proper form requires breaking 90 degrees at the elbow and locking out at the top. Sagging or bowing your back will result in terminated reps.</p>
+    </details>
+    <details>
+        <summary>1-Minute Sit-ups</summary>
+        <p>Sit-ups are a measure of core endurance. <strong>Maximum points: 15.</strong> Minimum passing points: <strong>7.5</strong>. Your elbows must touch your knees/thighs at the top of the movement, and your shoulder blades must touch the mat at the bottom. Your hands must remain in contact with your chest/shoulders.</p>
+    </details>
+
+    <h2>Minimum & Maximum Thresholds</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Gender</th>
+                <th>Age</th>
+                <th>Run Max (50pts)</th>
+                <th>Run Min (29.5pts)</th>
+                <th>Push Max (15pts)</th>
+                <th>Push Min (7.5pts)</th>
+                <th>Sit Max (15pts)</th>
+                <th>Sit Min (7.5pts)</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    // Demographic Bounds Data (Run in seconds, Push/Sit in reps)
+    const standards = {
+        "Male": {
+            "<25": { run: { max: 805, min: 1185 }, push: { max: 67, min: 33 }, sit: { max: 58, min: 39 } },
+            "25-29": { run: { max: 805, min: 1185 }, push: { max: 62, min: 30 }, sit: { max: 56, min: 37 } },
+            "30-34": { run: { max: 822, min: 1244 }, push: { max: 57, min: 27 }, sit: { max: 54, min: 36 } },
+            "35-39": { run: { max: 822, min: 1244 }, push: { max: 51, min: 24 }, sit: { max: 46, min: 30 } },
+            "40-44": { run: { max: 845, min: 1324 }, push: { max: 44, min: 21 }, sit: { max: 50, min: 31 } },
+            "45-49": { run: { max: 870, min: 1324 }, push: { max: 44, min: 18 }, sit: { max: 48, min: 28 } },
+            "50-54": { run: { max: 909, min: 1370 }, push: { max: 36, min: 15 }, sit: { max: 46, min: 25 } },
+            "55-59": { run: { max: 928, min: 1416 }, push: { max: 33, min: 12 }, sit: { max: 44, min: 22 } },
+            "60+": { run: { max: 928, min: 1416 }, push: { max: 30, min: 10 }, sit: { max: 42, min: 19 } }
+        },
+        "Female": {
+            "<25": { run: { max: 930, min: 1365 }, push: { max: 47, min: 15 }, sit: { max: 54, min: 35 } },
+            "25-29": { run: { max: 930, min: 1365 }, push: { max: 47, min: 14 }, sit: { max: 50, min: 31 } },
+            "30-34": { run: { max: 948, min: 1370 }, push: { max: 46, min: 12 }, sit: { max: 45, min: 26 } },
+            "35-39": { run: { max: 951, min: 1379 }, push: { max: 42, min: 10 }, sit: { max: 43, min: 24 } },
+            "40-44": { run: { max: 960, min: 1395 }, push: { max: 38, min: 9 }, sit: { max: 41, min: 21 } },
+            "45-49": { run: { max: 990, min: 1410 }, push: { max: 37, min: 7 }, sit: { max: 35, min: 19 } },
+            "50-54": { run: { max: 1019, min: 1440 }, push: { max: 35, min: 6 }, sit: { max: 32, min: 17 } },
+            "55-59": { run: { max: 1038, min: 1488 }, push: { max: 28, min: 5 }, sit: { max: 32, min: 12 } },
+            "60+": { run: { max: 1038, min: 1500 }, push: { max: 21, min: 4 }, sit: { max: 31, min: 8 } }
+        }
+    };
+
+    function formatSeconds(sec) {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // Populate Table
+    window.onload = function() {
+        const tbody = document.getElementById("table-body");
+        let html = "";
+        for (let gender in standards) {
+            for (let age in standards[gender]) {
+                const d = standards[gender][age];
+                html += `<tr>
+                    <td>${gender}</td>
+                    <td>${age}</td>
+                    <td>≤ ${formatSeconds(d.run.max)}</td>
+                    <td>${formatSeconds(d.run.min)}</td>
+                    <td>≥ ${d.push.max}</td>
+                    <td>${d.push.min}</td>
+                    <td>≥ ${d.sit.max}</td>
+                    <td>${d.sit.min}</td>
+                </tr>`;
+            }
+        }
+        tbody.innerHTML = html;
+    };
+
+    function calculateScore() {
+        const gender = document.getElementById('gender').value;
+        const age = document.getElementById('age').value;
+        
+        const runMinInput = parseInt(document.getElementById('run-min').value) || 0;
+        const runSecInput = parseInt(document.getElementById('run-sec').value) || 0;
+        const pushups = parseInt(document.getElementById('pushups').value) || 0;
+        const situps = parseInt(document.getElementById('situps').value) || 0;
+
+        const runTotalSeconds = (runMinInput * 60) + runSecInput;
+
+        if (runTotalSeconds === 0) {
+            alert("Please enter a valid 2-Mile Run time.");
+            return;
+        }
+
+        const data = standards[gender][age];
+        let runScore = 0, pushScore = 0, sitScore = 0;
+        let fails = [];
+
+        // Run Logic (Lower time is better)
+        if (runTotalSeconds <= data.run.max) {
+            runScore = 50.0;
+        } else if (runTotalSeconds > data.run.min) {
+            runScore = 0;
+            fails.push("2-Mile Run");
+        } else {
+            runScore = 29.5 + ((data.run.min - runTotalSeconds) / (data.run.min - data.run.max)) * 20.5;
+        }
+
+        // Push-ups Logic (Higher reps is better)
+        if (pushups >= data.push.max) {
+            pushScore = 15.0;
+        } else if (pushups < data.push.min) {
+            pushScore = 0;
+            fails.push("Push-ups");
+        } else {
+            pushScore = 7.5 + ((pushups - data.push.min) / (data.push.max - data.push.min)) * 7.5;
+        }
+
+        // Sit-ups Logic (Higher reps is better)
+        if (situps >= data.sit.max) {
+            sitScore = 15.0;
+        } else if (situps < data.sit.min) {
+            sitScore = 0;
+            fails.push("Sit-ups");
+        } else {
+            sitScore = 7.5 + ((situps - data.sit.min) / (data.sit.max - data.sit.min)) * 7.5;
+        }
+
+        const totalScore = (runScore + pushScore + sitScore).toFixed(1);
+
+        document.getElementById('results').style.display = 'block';
+        const scoreDisplay = document.getElementById('total-score');
+        const feedbackText = document.getElementById('feedback-text');
+
+        scoreDisplay.innerText = `${totalScore} / 80.0`;
+
+        if (fails.length > 0) {
+            scoreDisplay.className = "score-display warning";
+            feedbackText.innerHTML = `<span class="warning">UNSATISFACTORY:</span> You failed to meet the minimum threshold for: ${fails.join(", ")}.`;
+        } else if (parseFloat(totalScore) >= 55.0) { 
+            // Passing 75 total implies 55 points from physical + 20 from WHtR
+            scoreDisplay.className = "score-display pass";
+            feedbackText.innerHTML = `<span class="pass">SATISFACTORY/EXCELLENT PACE:</span> You have met all physical minimums. Ensure you pass your WHtR measurement to achieve a full composite score above 75.`;
+        } else {
+            scoreDisplay.className = "score-display warning";
+            feedbackText.innerHTML = `<span class="warning">RISK ZONE:</span> You met the individual component minimums, but your cumulative score is pacing too low. You need an average composite above 75 to pass.`;
+        }
+    }
+</script>
+
+</body>
+</html>
